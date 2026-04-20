@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Document Translator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="intro">
+        <p class="eyebrow">Document Translator</p>
+        <h1>Your Local Translator</h1>
+        <p class="lede">Upload a readable document, choose the source and target language, and translate on this device with Chrome.</p>
+      </section>
+
+      <section class="translator-panel" aria-label="Translation form">
+        <form id="translateForm">
+          <label class="drop-zone" for="fileInput">
+            <input id="fileInput" name="file" type="file" accept=".pdf,.docx,.txt,.md,.csv,.tsv,.json,.xml,.yaml,.yml,.html,.htm,.log" required>
+            <span class="drop-title">Choose a file</span>
+            <span id="fileName" class="drop-detail">PDF, DOCX, TXT, MD, CSV, JSON, HTML up to 15 MB</span>
+          </label>
+
+          <div class="field-grid">
+            <label>
+              <span>Source language</span>
+              <select name="sourceLanguage" id="sourceLanguage" required>
+              </select>
+            </label>
+
+            <label>
+              <span>Translate to</span>
+              <select name="targetLanguage" id="targetLanguage" required>
+              </select>
+            </label>
+          </div>
+
+          <div class="privacy-note">
+            <strong>Browser local mode</strong>
+            <span>Chrome translates on this device. The first run may download language packs, but document text stays in the browser.</span>
+          </div>
+
+          <button id="translateButton" type="submit">Translate TXT</button>
+          <div id="progressPanel" class="progress-panel" hidden>
+            <div class="progress-header">
+              <span id="progressLabel">Preparing</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-labelledby="progressLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div id="progressFill" class="progress-fill"></div>
+            </div>
+          </div>
+        </form>
+
+        <div id="downloadPanel" class="download-panel" hidden>
+          <p id="downloadName" class="download-name"></p>
+          <div class="download-actions">
+            <button id="saveButton" type="button">Choose the folder and download</button>
+          </div>
+        </div>
+
+        <div id="previewPanel" class="preview-panel" hidden>
+          <div class="preview-header">
+            <h2>First 5 translated rows</h2>
+            <span id="previewMeta"></span>
+          </div>
+          <pre id="previewText"></pre>
+        </div>
+
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.9.1/mammoth.browser.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

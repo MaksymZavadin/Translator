@@ -1,0 +1,19 @@
+{
+  "name": "translator",
+  "version": "1.0.0",
+  "description": "A static browser app that extracts document text and translates it with Chrome's local Translator API.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "check": "node --check public/app.js && node --check server.js"
+  },
+  "keywords": [
+    "translation",
+    "pdf",
+    "docx",
+    "text"
+  ],
+  "author": "",
+  "license": "MIT"
+}
