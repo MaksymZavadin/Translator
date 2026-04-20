@@ -66,6 +66,8 @@ Steps:
 
 The app does not need Node.js, Python, LibreTranslate, or any backend translation server when deployed. Node.js is only used locally to serve the static files during development.
 
+If GitHub Pages opens this README instead of the app, the Pages source is probably set to deploy from the repository root. Either switch `Settings` -> `Pages` -> `Source` to `GitHub Actions`, or use the root `index.html` redirect included in this repo, which forwards visitors to `public/`.
+
 Before pushing, you can run:
 
 ```bash
