@@ -36,7 +36,7 @@ The app uses:
 
 ## Language List
 
-The source and target dropdowns use the same country-based list: Austria, Bulgaria, Croatia, Czech Rep., France, Germany, Hungary, Italy, Kazakhstan, Moldova, Netherlands, Pakistan, Poland, Portugal, Romania, Serbia, Slovakia, Spain, Turkey, Ukraine, Sweden, Finland, and UAE.
+The source and target dropdowns use the same country-based list: Austria, Bulgaria, Croatia, Czech Rep., United Kingdom, France, Germany, Hungary, Italy, Kazakhstan, Moldova, Netherlands, Pakistan, Poland, Portugal, Romania, Serbia, Slovakia, Spain, Turkey, Ukraine, Sweden, Finland, and UAE.
 
 ## Run Locally
 

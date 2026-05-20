@@ -35,6 +35,7 @@ const COUNTRY_LANGUAGES = [
   { country: 'Bulgaria', code: 'bg', language: 'Bulgarian' },
   { country: 'Croatia', code: 'hr', language: 'Croatian' },
   { country: 'Czech Rep.', code: 'cs', language: 'Czech' },
+  { country: 'United Kingdom', code: 'en', language: 'English' },
   { country: 'France', code: 'fr', language: 'French' },
   { country: 'Germany', code: 'de', language: 'German' },
   { country: 'Hungary', code: 'hu', language: 'Hungarian' },
@@ -61,6 +62,7 @@ const LANGUAGE_NAMES = {
   bg: 'Bulgarian',
   cs: 'Czech',
   de: 'German',
+  en: 'English',
   es: 'Spanish',
   fi: 'Finnish',
   fr: 'French',
@@ -105,7 +107,7 @@ function populateLanguageSelects() {
   sourceLanguage.replaceChildren(...options.map((option) => option.cloneNode(true)));
   targetLanguage.replaceChildren(...options.map((option) => option.cloneNode(true)));
   sourceLanguage.value = 'uk';
-  targetLanguage.value = 'de';
+  targetLanguage.value = 'en';
 }
 
 populateLanguageSelects();
@@ -531,7 +533,7 @@ function showPreview(translatedText, size) {
 
 fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
-  fileName.textContent = file ? `${file.name} (${Math.round(file.size / 1024)} KB)` : 'PDF, DOCX, TXT, MD, CSV, JSON, HTML up to 15 MB';
+  fileName.textContent = file ? `${file.name} (${Math.round(file.size / 1024)} KB)` : 'PDF, DOCX, and text-like files up to 15 MB';
   clearDownload();
   setStatus('');
 });
