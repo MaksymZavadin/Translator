@@ -3,6 +3,7 @@ const fileInput = document.querySelector('#fileInput');
 const fileName = document.querySelector('#fileName');
 const sourceLanguage = document.querySelector('#sourceLanguage');
 const targetLanguage = document.querySelector('#targetLanguage');
+const pairSupport = document.querySelector('#pairSupport');
 const statusBox = document.querySelector('#status');
 const button = document.querySelector('#translateButton');
 const progressPanel = document.querySelector('#progressPanel');
@@ -85,6 +86,9 @@ const LANGUAGE_NAMES = {
 let translatedBlob = null;
 let translatedFileName = 'translated.txt';
 let translatedObjectUrl = null;
+let isSubmitting = false;
+let latestPairCheckToken = 0;
+const availabilityCache = new Map();
 let activeProgress = {
   extractionBase: 10,
   extractionShare: 25,
@@ -115,6 +119,11 @@ populateLanguageSelects();
 function setStatus(message, type = '') {
   statusBox.textContent = message;
   statusBox.className = `status ${type}`.trim();
+}
+
+function setPairSupport(message, type = '') {
+  pairSupport.textContent = message;
+  pairSupport.className = `pair-support ${type}`.trim();
 }
 
 function setProgress(value, label = '') {
@@ -421,6 +430,77 @@ function getTranslatorApi() {
   return window.Translator || null;
 }
 
+async function getPairAvailability(source, target) {
+  if (source === target) return 'same';
+
+  const cacheKey = `${source}:${target}`;
+  if (availabilityCache.has(cacheKey)) {
+    return availabilityCache.get(cacheKey);
+  }
+
+  const TranslatorApi = getTranslatorApi();
+  if (!TranslatorApi) {
+    return 'no-api';
+  }
+
+  try {
+    const availability = await Promise.race([
+      TranslatorApi.availability({
+        sourceLanguage: source,
+        targetLanguage: target
+      }),
+      new Promise((resolve) => setTimeout(() => resolve('unknown'), 3500))
+    ]);
+    availabilityCache.set(cacheKey, availability);
+    return availability;
+  } catch {
+    return 'unknown';
+  }
+}
+
+async function refreshPairSupportState() {
+  const source = sourceLanguage.value;
+  const target = targetLanguage.value;
+  const sourceName = LANGUAGE_NAMES[source] || source;
+  const targetName = LANGUAGE_NAMES[target] || target;
+  const token = ++latestPairCheckToken;
+
+  if (source === target) {
+    setPairSupport('Selected pair is always available. The app will preserve text and generate a TXT output.', 'supported');
+    if (!isSubmitting) button.disabled = false;
+    return;
+  }
+
+  setPairSupport(`Checking support for ${sourceName} to ${targetName}...`, 'checking');
+  if (!isSubmitting) button.disabled = true;
+  const availability = await getPairAvailability(source, target);
+
+  if (token !== latestPairCheckToken) return;
+
+  if (availability === 'available' || availability === 'downloadable' || availability === 'downloading') {
+    setPairSupport(`${sourceName} to ${targetName} is supported in Chrome local mode.`, 'supported');
+    if (!isSubmitting) button.disabled = false;
+    return;
+  }
+
+  if (availability === 'unavailable') {
+    setPairSupport(`${sourceName} to ${targetName} is not available in Chrome local mode yet. Choose another pair or use a cloud translator.`, 'unsupported');
+    hideProgress();
+    if (!isSubmitting) button.disabled = true;
+    return;
+  }
+
+  if (availability === 'no-api') {
+    setPairSupport('Chrome local Translator API is not available in this browser. Use Chrome 138+ on desktop.', 'unsupported');
+    hideProgress();
+    if (!isSubmitting) button.disabled = true;
+    return;
+  }
+
+  setPairSupport(`Could not verify ${sourceName} to ${targetName} support right now. You can still try translating.`, 'checking');
+  if (!isSubmitting) button.disabled = false;
+}
+
 async function createChromeTranslator(source, target) {
   const TranslatorApi = getTranslatorApi();
   if (!TranslatorApi) {
@@ -538,6 +618,20 @@ fileInput.addEventListener('change', () => {
   setStatus('');
 });
 
+sourceLanguage.addEventListener('change', () => {
+  clearDownload();
+  setStatus('');
+  refreshPairSupportState();
+});
+
+targetLanguage.addEventListener('change', () => {
+  clearDownload();
+  setStatus('');
+  refreshPairSupportState();
+});
+
+refreshPairSupportState();
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -547,16 +641,29 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
+  const source = sourceLanguage.value;
+  const target = targetLanguage.value;
+  const sourceName = LANGUAGE_NAMES[source] || source;
+  const targetName = LANGUAGE_NAMES[target] || target;
+
+  isSubmitting = true;
   button.disabled = true;
   clearDownload();
   let translator = null;
 
   try {
-    setProgress(3, 'Preparing translation');
-    if (sourceLanguage.value !== targetLanguage.value) {
+    const availability = await getPairAvailability(source, target);
+    if (availability === 'unavailable') {
+      throw new Error(`${sourceName} to ${targetName} is not available in Chrome local mode yet. Choose another pair or use a cloud translator.`);
+    }
+
+    if (availability === 'no-api') {
+      throw new Error('Chrome local Translator API is not available in this browser. Use Chrome 138 or newer on desktop.');
+    }
+
+    if (source !== target) {
       setStatus('Preparing Chrome local translator.');
-      setProgress(8, 'Preparing Chrome local translator');
-      translator = await createChromeTranslator(sourceLanguage.value, targetLanguage.value);
+      translator = await createChromeTranslator(source, target);
     }
 
     setStatus('Extracting text in the browser.');
@@ -566,20 +673,22 @@ form.addEventListener('submit', async (event) => {
       throw new Error('No readable text was found. Scanned image PDFs are not supported yet.');
     }
 
-    const translatedText = await translateLocally(extractedText, sourceLanguage.value, targetLanguage.value, translator);
+    const translatedText = await translateLocally(extractedText, source, target, translator);
     const baseName = selectedFile.name.replace(/\.[^.]+$/, '') || 'document';
-    const outputName = `${sanitizeFilename(baseName)}-${targetLanguage.value}.txt`;
-    const resultText = buildResultText(selectedFile.name, sourceLanguage.value, targetLanguage.value, translatedText);
+    const outputName = `${sanitizeFilename(baseName)}-${target}.txt`;
+    const resultText = buildResultText(selectedFile.name, source, target, translatedText);
 
     showDownload(outputName, resultText);
     showPreview(translatedText, translatedBlob.size);
     setProgress(100, 'Translation complete');
     setStatus('Translation ready. The TXT file was created in your browser.', 'success');
   } catch (error) {
+    hideProgress();
     setStatus(error.message || 'Translation failed.', 'error');
   } finally {
     if (translator && typeof translator.destroy === 'function') translator.destroy();
-    button.disabled = false;
+    isSubmitting = false;
+    refreshPairSupportState();
   }
 });
 

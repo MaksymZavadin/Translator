@@ -159,6 +159,35 @@ select {
   line-height: 1.5;
 }
 
+.pair-support {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 0;
+  padding: 12px 14px;
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 0.93rem;
+  line-height: 1.5;
+}
+
+.pair-support.checking {
+  color: var(--muted);
+}
+
+.pair-support.supported {
+  border-color: #9ad5af;
+  background: #f3fcf7;
+  color: #1f8f4f;
+  font-weight: 700;
+}
+
+.pair-support.unsupported {
+  border-color: #e8b2b2;
+  background: #fff6f6;
+  color: var(--danger);
+  font-weight: 700;
+}
+
 button {
   min-height: 52px;
   border: 0;
