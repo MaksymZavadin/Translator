@@ -1,8 +1,10 @@
 const form = document.querySelector('#translateForm');
 const fileInput = document.querySelector('#fileInput');
 const fileName = document.querySelector('#fileName');
+const pastedTextInput = document.querySelector('#pastedText');
 const sourceLanguage = document.querySelector('#sourceLanguage');
 const targetLanguage = document.querySelector('#targetLanguage');
+const swapLanguagesButton = document.querySelector('#swapLanguages');
 const pairSupport = document.querySelector('#pairSupport');
 const statusBox = document.querySelector('#status');
 const button = document.querySelector('#translateButton');
@@ -541,7 +543,7 @@ async function translateLocally(text, source, target, translator) {
 
   const units = createTranslationUnits(text);
   const translatableUnits = units.filter((unit) => unit.type === 'translate' && unit.text.trim());
-  if (!translatableUnits.length) throw new Error('No readable text was found in the uploaded file.');
+  if (!translatableUnits.length) throw new Error('No readable text was found in the provided input.');
   const totalChunks = translatableUnits.reduce((total, unit) => total + splitLongSegment(unit.text).length, 0);
 
   let translatedCount = 0;
@@ -618,6 +620,11 @@ fileInput.addEventListener('change', () => {
   setStatus('');
 });
 
+pastedTextInput.addEventListener('input', () => {
+  clearDownload();
+  setStatus('');
+});
+
 sourceLanguage.addEventListener('change', () => {
   clearDownload();
   setStatus('');
@@ -630,14 +637,26 @@ targetLanguage.addEventListener('change', () => {
   refreshPairSupportState();
 });
 
+swapLanguagesButton.addEventListener('click', () => {
+  if (isSubmitting) return;
+
+  const previousSource = sourceLanguage.value;
+  sourceLanguage.value = targetLanguage.value;
+  targetLanguage.value = previousSource;
+  clearDownload();
+  setStatus('Translation direction updated.');
+  refreshPairSupportState();
+});
+
 refreshPairSupportState();
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   const selectedFile = fileInput.files[0];
-  if (!selectedFile) {
-    setStatus('Choose a file first.', 'error');
+  const pastedText = normalizeText(pastedTextInput.value || '');
+  if (!selectedFile && !pastedText) {
+    setStatus('Choose a file or paste text first.', 'error');
     return;
   }
 
@@ -666,17 +685,28 @@ form.addEventListener('submit', async (event) => {
       translator = await createChromeTranslator(source, target);
     }
 
-    setStatus('Extracting text in the browser.');
-    setProgress(activeProgress.extractionBase, 'Extracting text');
-    const extractedText = await extractText(selectedFile);
+    let extractedText = '';
+    let originalName = 'pasted-text.txt';
+
+    if (pastedText) {
+      setStatus('Preparing pasted text.');
+      setProgress(activeProgress.extractionBase, 'Preparing pasted text');
+      extractedText = pastedText;
+    } else {
+      setStatus('Extracting text in the browser.');
+      setProgress(activeProgress.extractionBase, 'Extracting text');
+      extractedText = await extractText(selectedFile);
+      originalName = selectedFile.name;
+    }
+
     if (!extractedText.trim()) {
       throw new Error('No readable text was found. Scanned image PDFs are not supported yet.');
     }
 
     const translatedText = await translateLocally(extractedText, source, target, translator);
-    const baseName = selectedFile.name.replace(/\.[^.]+$/, '') || 'document';
+    const baseName = pastedText ? 'pasted-text' : (selectedFile.name.replace(/\.[^.]+$/, '') || 'document');
     const outputName = `${sanitizeFilename(baseName)}-${target}.txt`;
-    const resultText = buildResultText(selectedFile.name, source, target, translatedText);
+    const resultText = buildResultText(originalName, source, target, translatedText);
 
     showDownload(outputName, resultText);
     showPreview(translatedText, translatedBlob.size);
@@ -694,7 +724,7 @@ form.addEventListener('submit', async (event) => {
 
 saveButton.addEventListener('click', async () => {
   if (!translatedBlob) {
-    setStatus('Translate a file first.', 'error');
+    setStatus('Translate text first.', 'error');
     return;
   }
 

@@ -75,20 +75,21 @@ form {
 }
 
 .drop-zone {
-  min-height: 176px;
+  min-height: 92px;
   border: 2px dashed #91a7b8;
   border-radius: 8px;
   background: var(--surface);
   display: grid;
   place-content: center;
   gap: 8px;
-  padding: 24px;
+  padding: 14px 18px;
   text-align: center;
   cursor: pointer;
 }
 
 .drop-zone:focus-within,
 select:focus,
+textarea:focus,
 button:focus {
   outline: 3px solid rgba(181, 71, 8, 0.25);
   outline-offset: 2px;
@@ -112,10 +113,54 @@ button:focus {
   line-height: 1.5;
 }
 
+.paste-zone {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+#pastedText {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.5;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.paste-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
 .field-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 52px 1fr;
   gap: 16px;
+  align-items: end;
+}
+
+.swap-button {
+  min-height: 48px;
+  width: 52px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.swap-button:hover {
+  background: #f1f9ff;
 }
 
 label span {
@@ -337,6 +382,10 @@ button:disabled {
 
   .field-grid {
     grid-template-columns: 1fr;
+  }
+
+  .swap-button {
+    width: 100%;
   }
 
   .download-actions {

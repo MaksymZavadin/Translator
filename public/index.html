@@ -17,10 +17,18 @@
       <section class="translator-panel" aria-label="Translation form">
         <form id="translateForm">
           <label class="drop-zone" for="fileInput">
-            <input id="fileInput" name="file" type="file" accept=".pdf,.docx,.txt,.md,.csv,.tsv,.json,.xml,.yaml,.yml,.html,.htm,.log" required>
+            <input id="fileInput" name="file" type="file" accept=".pdf,.docx,.txt,.md,.csv,.tsv,.json,.xml,.yaml,.yml,.html,.htm,.log">
             <span class="drop-title">Choose a file</span>
             <span id="fileName" class="drop-detail">PDF, DOCX, and text-like files up to 15 MB</span>
           </label>
+
+          <div class="paste-zone">
+            <label for="pastedText">
+              <span>Or paste copied text</span>
+            </label>
+            <textarea id="pastedText" rows="6" placeholder="Paste your source text here..."></textarea>
+            <p class="paste-note">If both are provided, pasted text is translated instead of the uploaded file.</p>
+          </div>
 
           <div class="field-grid">
             <label>
@@ -28,6 +36,8 @@
               <select name="sourceLanguage" id="sourceLanguage" required>
               </select>
             </label>
+
+            <button id="swapLanguages" class="swap-button" type="button" aria-label="Reverse translation direction" title="Reverse translation direction">&#8646;</button>
 
             <label>
               <span>Translate to</span>
@@ -43,7 +53,7 @@
             <span>Chrome translates on this device. The first run may download language packs, but document text stays in the browser.</span>
           </div>
 
-          <button id="translateButton" type="submit">Translate File</button>
+          <button id="translateButton" type="submit">Translate</button>
           <div id="progressPanel" class="progress-panel" hidden>
             <div class="progress-header">
               <span id="progressLabel">Preparing</span>
