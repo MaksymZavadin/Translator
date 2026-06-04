@@ -4,6 +4,8 @@ const fileName = document.querySelector('#fileName');
 const pastedTextInput = document.querySelector('#pastedText');
 const sourceLanguage = document.querySelector('#sourceLanguage');
 const targetLanguage = document.querySelector('#targetLanguage');
+const themeMode = document.querySelector('#themeMode');
+const themeQuickToggle = document.querySelector('#themeQuickToggle');
 const swapLanguagesButton = document.querySelector('#swapLanguages');
 const pairSupport = document.querySelector('#pairSupport');
 const statusBox = document.querySelector('#status');
@@ -85,21 +87,98 @@ const LANGUAGE_NAMES = {
   ur: 'Urdu'
 };
 
+const THEME_STORAGE_KEY = 'translator.theme';
+
 let translatedBlob = null;
 let translatedFileName = 'translated.txt';
 let translatedObjectUrl = null;
 let isSubmitting = false;
 let latestPairCheckToken = 0;
 const availabilityCache = new Map();
+const TRANSLATOR_CREATE_TIMEOUT_MS = 90_000;
 let activeProgress = {
-  extractionBase: 10,
-  extractionShare: 25,
-  translationBase: 40,
-  translationShare: 55
+  extractionBase: 65,
+  extractionShare: 15,
+  translationBase: 82,
+  translationShare: 16
 };
 
 if (window.pdfjsLib) {
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+
+function getStoredThemeMode() {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY) || 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+function getSystemTheme() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+}
+
+function getEffectiveTheme(mode) {
+  const selected = mode === 'light' || mode === 'dark' ? mode : 'system';
+  return selected === 'system' ? getSystemTheme() : selected;
+}
+
+function updateThemeQuickToggle(mode) {
+  if (!themeQuickToggle) return;
+
+  const effective = getEffectiveTheme(mode);
+  const nextTheme = effective === 'dark' ? 'light' : 'dark';
+  const label = `Switch to ${nextTheme} theme`;
+
+  themeQuickToggle.dataset.nextTheme = nextTheme;
+  themeQuickToggle.setAttribute('aria-label', label);
+  themeQuickToggle.title = label;
+}
+
+function applyTheme(mode) {
+  const selected = mode === 'light' || mode === 'dark' ? mode : 'system';
+  const effective = getEffectiveTheme(selected);
+  document.documentElement.dataset.theme = effective;
+
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, selected);
+  } catch {
+    // Ignore storage errors in restricted contexts.
+  }
+
+  if (themeMode) {
+    themeMode.value = selected;
+  }
+
+  updateThemeQuickToggle(selected);
+}
+
+const preferredTheme = getStoredThemeMode();
+applyTheme(preferredTheme);
+
+if (themeMode) {
+  themeMode.addEventListener('change', () => {
+    applyTheme(themeMode.value);
+  });
+}
+
+if (themeQuickToggle) {
+  themeQuickToggle.addEventListener('click', () => {
+    const nextTheme = themeQuickToggle.dataset.nextTheme || (getSystemTheme() === 'dark' ? 'light' : 'dark');
+    applyTheme(nextTheme);
+  });
+}
+
+if (window.matchMedia) {
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  media.addEventListener('change', () => {
+    if (getStoredThemeMode() === 'system') {
+      applyTheme('system');
+    }
+  });
 }
 
 function populateLanguageSelects() {
@@ -432,6 +511,12 @@ function getTranslatorApi() {
   return window.Translator || null;
 }
 
+function createTimeoutError(message, code) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
 async function getPairAvailability(source, target) {
   if (source === target) return 'same';
 
@@ -518,21 +603,34 @@ async function createChromeTranslator(source, target) {
     throw new Error(`Chrome local translation is not available for ${LANGUAGE_NAMES[source] || source} to ${LANGUAGE_NAMES[target] || target}.`);
   }
 
-  return TranslatorApi.create({
+  setProgress(35, 'Preparing language model');
+
+  const translatorPromise = TranslatorApi.create({
     sourceLanguage: source,
     targetLanguage: target,
     monitor(monitorTarget) {
       monitorTarget.addEventListener('downloadprogress', (event) => {
         if (Number.isFinite(event.loaded)) {
           setStatus(`Downloading Chrome language pack: ${Math.round(event.loaded * 100)}%.`);
-          setProgress(10 + event.loaded * 25, 'Downloading language pack');
+          setProgress(35 + event.loaded * 30, 'Downloading language pack');
         } else {
           setStatus('Downloading Chrome language pack.');
-          setProgress(15, 'Downloading language pack');
+          setProgress(45, 'Downloading language pack');
         }
       });
     }
   });
+
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(createTimeoutError(
+        'Chrome translator setup is taking too long and was canceled. Try Incognito mode with extensions disabled, then retry.',
+        'translator-create-timeout'
+      ));
+    }, TRANSLATOR_CREATE_TIMEOUT_MS);
+  });
+
+  return Promise.race([translatorPromise, timeoutPromise]);
 }
 
 async function translateLocally(text, source, target, translator) {
@@ -714,7 +812,11 @@ form.addEventListener('submit', async (event) => {
     setStatus('Translation ready. The TXT file was created in your browser.', 'success');
   } catch (error) {
     hideProgress();
-    setStatus(error.message || 'Translation failed.', 'error');
+    if (error?.code === 'translator-create-timeout') {
+      setStatus(`${error.message} If it still hangs, restart Chrome and clear site data for this page.`, 'error');
+    } else {
+      setStatus(error.message || 'Translation failed.', 'error');
+    }
   } finally {
     if (translator && typeof translator.destroy === 'function') translator.destroy();
     isSubmitting = false;

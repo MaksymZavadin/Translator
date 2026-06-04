@@ -1,14 +1,37 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --ink: #17212b;
   --muted: #5a6672;
   --line: #a8cdea;
   --surface: #e9f6ff;
   --panel: #f7fcff;
+  --body-start: #eef9ff;
+  --body-end: #d7efff;
+  --soft-bg: #ffffff;
+  --drop-border: #91a7b8;
+  --progress-bg: #d7edf9;
+  --status-success: #1f8f4f;
   --accent: #28b463;
   --accent-strong: #1f8f4f;
   --focus: #b54708;
   --danger: #a32020;
+}
+
+:root[data-theme='dark'] {
+  --ink: #e8eef5;
+  --muted: #a9b7c8;
+  --line: #35506e;
+  --surface: #1b2b3a;
+  --panel: #142231;
+  --body-start: #0f1a24;
+  --body-end: #0b141d;
+  --soft-bg: #1a2a3b;
+  --drop-border: #4a6480;
+  --progress-bg: #1f3a54;
+  --status-success: #4ad082;
+  --accent: #34c16a;
+  --accent-strong: #2ca95d;
+  --danger: #ff7f7f;
 }
 
 * {
@@ -19,7 +42,7 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: linear-gradient(180deg, #eef9ff 0%, #d7efff 100%);
+  background: linear-gradient(180deg, var(--body-start) 0%, var(--body-end) 100%);
   color: var(--ink);
 }
 
@@ -35,6 +58,60 @@ body {
 
 .intro {
   padding-top: 18px;
+}
+
+.theme-control {
+  display: inline-grid;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.theme-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-control label {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.theme-control select {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft-bg);
+  color: var(--ink);
+  font: inherit;
+  padding: 0 10px;
+}
+
+.theme-quick-toggle {
+  min-height: 40px;
+  width: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft-bg);
+  color: var(--ink);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+}
+
+.theme-quick-toggle::before {
+  content: '\263D';
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.theme-quick-toggle[data-next-theme='light']::before {
+  content: '\2600';
+}
+
+.theme-quick-toggle:hover {
+  background: var(--surface);
 }
 
 .eyebrow {
@@ -76,7 +153,7 @@ form {
 
 .drop-zone {
   min-height: 92px;
-  border: 2px dashed #91a7b8;
+  border: 2px dashed var(--drop-border);
   border-radius: 8px;
   background: var(--surface);
   display: grid;
@@ -116,7 +193,7 @@ button:focus {
 .paste-zone {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--soft-bg);
   padding: 14px;
 }
 
@@ -124,7 +201,7 @@ button:focus {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--soft-bg);
   color: var(--ink);
   font: inherit;
   line-height: 1.5;
@@ -152,7 +229,7 @@ button:focus {
   width: 52px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--soft-bg);
   color: var(--ink);
   font-size: 1.2rem;
   line-height: 1;
@@ -160,7 +237,7 @@ button:focus {
 }
 
 .swap-button:hover {
-  background: #f1f9ff;
+  background: var(--surface);
 }
 
 label span {
@@ -176,7 +253,7 @@ select {
   min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--soft-bg);
   color: var(--ink);
   font: inherit;
   padding: 0 12px;
@@ -189,7 +266,7 @@ select {
   padding: 14px;
   display: grid;
   gap: 6px;
-  background: #ffffff;
+  background: var(--soft-bg);
 }
 
 .privacy-note strong {
@@ -209,7 +286,7 @@ select {
   border-radius: 8px;
   margin: 0;
   padding: 12px 14px;
-  background: #ffffff;
+  background: var(--soft-bg);
   color: var(--muted);
   font-size: 0.93rem;
   line-height: 1.5;
@@ -268,7 +345,7 @@ button:disabled {
 }
 
 .progress-track {
-  background: #d7edf9;
+  background: var(--progress-bg);
   border: 1px solid var(--line);
   border-radius: 8px;
   height: 14px;
@@ -334,7 +411,7 @@ button:disabled {
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--soft-bg);
   color: var(--ink);
   font: 0.95rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   padding: 14px;
@@ -355,7 +432,7 @@ button:disabled {
 }
 
 .status.success {
-  color: var(--accent-strong);
+  color: var(--status-success);
   font-weight: 700;
 }
 

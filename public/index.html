@@ -4,11 +4,34 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Document Translator</title>
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem('translator.theme') || 'system';
+          const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const effective = stored === 'system' ? (isDark ? 'dark' : 'light') : stored;
+          document.documentElement.dataset.theme = effective;
+        } catch {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <main class="app-shell">
       <section class="intro">
+        <div class="theme-control" aria-label="Theme switcher">
+          <label for="themeMode">Theme</label>
+          <div class="theme-row">
+            <select id="themeMode" name="themeMode">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+            <button id="themeQuickToggle" class="theme-quick-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"></button>
+          </div>
+        </div>
         <p class="eyebrow">Document Translator</p>
         <h1>Your Local Translator</h1>
         <p class="lede">Upload a readable document, choose the source and target language, and translate on this device with Chrome.</p>
