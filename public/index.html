@@ -76,6 +76,15 @@
             <span>Chrome translates on this device. The first run may download language packs, but document text stays in the browser.</span>
           </div>
 
+          <div class="export-control">
+            <label for="exportFormat">Export format</label>
+            <select id="exportFormat" name="exportFormat">
+              <option value="txt" selected>TXT (simple)</option>
+              <option value="html">HTML (preserve structure)</option>
+            </select>
+            <p class="export-note">HTML preserves headings, lists, and paragraphs better for DOCX and text-based PDF files.</p>
+          </div>
+
           <button id="translateButton" type="submit">Translate</button>
           <div id="progressPanel" class="progress-panel" hidden>
             <div class="progress-header">

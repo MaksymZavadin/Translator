@@ -281,6 +281,29 @@ select {
   line-height: 1.5;
 }
 
+.export-control {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 0;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+  background: var(--soft-bg);
+}
+
+.export-control label {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.export-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
 .pair-support {
   border: 1px solid var(--line);
   border-radius: 8px;
